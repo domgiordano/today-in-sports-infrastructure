@@ -34,6 +34,8 @@ locals {
     SOURCE_RUNS_TABLE_NAME = aws_dynamodb_table.source_runs.id
     PLAYS_TABLE_NAME       = aws_dynamodb_table.plays.id
     REQUEST_LOG_TABLE_NAME = aws_dynamodb_table.request_log.id
+    USERS_TABLE_NAME       = aws_dynamodb_table.users.id
+    GROUPS_TABLE_NAME      = aws_dynamodb_table.groups.id
 
     # Untouched upstream payloads. Once ingestion completes this archive, not
     # the upstream API, is the source of record — see the durability rule in

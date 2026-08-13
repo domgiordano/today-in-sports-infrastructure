@@ -16,6 +16,12 @@ locals {
       http_method = "GET"
     },
     {
+      name        = "users"
+      description = "Admin-only: who is playing, and how often"
+      path_part   = "users"
+      http_method = "GET"
+    },
+    {
       name        = "questions-list"
       description = "Admin-only: browse the question bank, filtered by status/sport/tier/date"
       path_part   = "questions"

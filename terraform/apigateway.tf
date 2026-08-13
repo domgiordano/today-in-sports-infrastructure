@@ -28,6 +28,16 @@ locals {
     }
   ]
 
+  account_endpoints = [
+    for l in local.account_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.account[l.name].invoke_arn
+      authorization = "COGNITO_USER_POOLS"
+    }
+  ]
+
   admin_endpoints = [
     for l in local.admin_lambdas : {
       name          = l.name
@@ -56,7 +66,8 @@ module "api" {
   certificate_arn = aws_acm_certificate_validation.api.certificate_arn
 
   services = {
-    admin = { path_prefix = "admin", endpoints = local.admin_endpoints }
-    play  = { path_prefix = "play", endpoints = local.play_endpoints }
+    admin   = { path_prefix = "admin", endpoints = local.admin_endpoints }
+    play    = { path_prefix = "play", endpoints = local.play_endpoints }
+    account = { path_prefix = "account", endpoints = local.account_endpoints }
   }
 }

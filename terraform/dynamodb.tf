@@ -356,3 +356,88 @@ resource "aws_dynamodb_table" "request_log" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-request-log" }))
 }
+
+#**********************
+# People and groups
+#**********************
+
+# The spine of everything social. Cognito holds credentials and nothing else,
+# so streaks, badges, group membership and play counts need somewhere of their
+# own to live.
+#
+# Written lazily on the first authenticated request rather than by a Cognito
+# post-confirmation trigger: a trigger is a second deploy target and a failure
+# mode where sign-up succeeds and the profile silently does not.
+resource "aws_dynamodb_table" "users" {
+  name           = "${var.app_name}-users"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "userId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  # Streak leaderboards, and the admin users panel sorted by activity.
+  attribute {
+    name = "lastPlayedDate"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "activity-index"
+    hash_key        = "lastPlayedDate"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-users" }))
+}
+
+# Friend groups. Joining is by invite code, never by a searchable directory: a
+# public list of small private groups is a harassment surface with no upside
+# for a trivia game.
+resource "aws_dynamodb_table" "groups" {
+  name           = "${var.app_name}-groups"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "groupId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "groupId"
+    type = "S"
+  }
+
+  attribute {
+    name = "inviteCode"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "invite-index"
+    hash_key        = "inviteCode"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-groups" }))
+}
