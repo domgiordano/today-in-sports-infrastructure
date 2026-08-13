@@ -23,6 +23,18 @@ locals {
       path_part   = "answer"
       http_method = "POST"
     },
+    {
+      name        = "leaderboard"
+      description = "Public: the day's scores, plus the caller's own standing"
+      path_part   = "leaderboard"
+      http_method = "GET"
+    },
+    {
+      name        = "name"
+      description = "Public: attach a display name to a finished round"
+      path_part   = "name"
+      http_method = "POST"
+    },
   ]
 }
 
