@@ -4,6 +4,12 @@ locals {
   # and the Bearer token is validated in-handler, matching xomtracks/xomify.
   admin_lambdas = [
     {
+      name        = "review-queue"
+      description = "Admin-only: only the questions needed for upcoming short dates"
+      path_part   = "review-queue"
+      http_method = "GET"
+    },
+    {
       name        = "questions-list"
       description = "Admin-only: browse the question bank, filtered by status/sport/tier/date"
       path_part   = "questions"
