@@ -1,0 +1,250 @@
+#**********************
+# GAMES — the ETL landing zone
+#
+# Every ingested game from every source, untouched by notability rules.
+# Deliberately separate from EVENTS: re-running or adding a detector must never
+# require re-hitting an upstream source. Several of those sources are free
+# community endpoints and two have already been shut down once (Ergast, and the
+# NHL's old statsapi host), so ingestion is treated as a one-time extraction of
+# immutable history.
+#
+# gameDate is the source's OFFICIAL local game date, never the queried date —
+# an MLB night game at 23:05Z on Oct 10 has an officialDate of Oct 11 and is
+# returned under both. See docs/features/today-in-sports/SPIKE-FINDINGS.md.
+#**********************
+
+resource "aws_dynamodb_table" "games" {
+  name           = "${var.app_name}-games"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "sportSeason"
+  range_key      = "gameDateId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  # "mlb#1991"
+  attribute {
+    name = "sportSeason"
+    type = "S"
+  }
+
+  # "1991-05-01#201097"
+  attribute {
+    name = "gameDateId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-games" }))
+}
+
+#**********************
+# EVENTS — notable moments, derived from GAMES by rule
+#
+# Partitioned on the calendar date (MM-DD) because every read is "what happened
+# on this day", across all years at once.
+#**********************
+
+resource "aws_dynamodb_table" "events" {
+  name           = "${var.app_name}-events"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "mmdd"
+  range_key      = "yearEventId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  # "08-13"
+  attribute {
+    name = "mmdd"
+    type = "S"
+  }
+
+  # "1991#201097"
+  attribute {
+    name = "yearEventId"
+    type = "S"
+  }
+
+  attribute {
+    name = "sport"
+    type = "S"
+  }
+
+  attribute {
+    name = "year"
+    type = "N"
+  }
+
+  attribute {
+    name = "notabilityScore"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name            = "sport-year-index"
+    hash_key        = "sport"
+    range_key       = "year"
+    projection_type = "ALL"
+  }
+
+  # Used by the assembler to pick the most notable event for a thin date.
+  global_secondary_index {
+    name            = "sport-notability-index"
+    hash_key        = "sport"
+    range_key       = "notabilityScore"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-events" }))
+}
+
+#**********************
+# QUESTIONS — the reviewable bank
+#**********************
+
+resource "aws_dynamodb_table" "questions" {
+  name           = "${var.app_name}-questions"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "questionId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "questionId"
+    type = "S"
+  }
+
+  # draft | approved | rejected | used
+  attribute {
+    name = "status"
+    type = "S"
+  }
+
+  attribute {
+    name = "mmdd"
+    type = "S"
+  }
+
+  # "mlb#3" — sport and tier, so the assembler can pull a specific
+  # sport-and-difficulty slot straight out of the approved bank.
+  attribute {
+    name = "sportTier"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "status-mmdd-index"
+    hash_key        = "status"
+    range_key       = "mmdd"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "status-sportTier-index"
+    hash_key        = "status"
+    range_key       = "sportTier"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-questions" }))
+}
+
+#**********************
+# QUIZZES — the assembled daily five
+#
+# quizDate is a UTC yyyy-mm-dd. Note this is a different thing from an event's
+# gameDate, which is the local date the game was actually played.
+#**********************
+
+resource "aws_dynamodb_table" "quizzes" {
+  name           = "${var.app_name}-quizzes"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "quizDate"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "quizDate"
+    type = "S"
+  }
+
+  # draft | scheduled | published
+  attribute {
+    name = "status"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "status-quizDate-index"
+    hash_key        = "status"
+    range_key       = "quizDate"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-quizzes" }))
+}
+
+#**********************
+# SOURCE RUNS — ingestion and detector run log
+#
+# Ingestion is throttled and resumable; this is where the checkpoint lives so a
+# multi-decade run can be stopped and restarted without re-fetching.
+#**********************
+
+resource "aws_dynamodb_table" "source_runs" {
+  name           = "${var.app_name}-source-runs"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "runId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "runId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-source-runs" }))
+}
