@@ -24,6 +24,12 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "hint"
+      description = "Public: release the multiple-choice options in exchange for part of the credit"
+      path_part   = "hint"
+      http_method = "POST"
+    },
+    {
       name        = "leaderboard"
       description = "Public: the day's scores, plus the caller's own standing"
       path_part   = "leaderboard"
