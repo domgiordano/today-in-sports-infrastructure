@@ -22,6 +22,12 @@ locals {
       http_method = "GET"
     },
     {
+      name        = "announcements"
+      description = "Admin-only: write an announcement, or take one down"
+      path_part   = "announcements"
+      http_method = "POST"
+    },
+    {
       name        = "questions-list"
       description = "Admin-only: browse the question bank, filtered by status/sport/tier/date"
       path_part   = "questions"

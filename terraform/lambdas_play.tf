@@ -30,6 +30,12 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "announcements"
+      description = "Public: anything the product needs to tell players"
+      path_part   = "announcements"
+      http_method = "GET"
+    },
+    {
       name        = "leaderboard"
       description = "Public: the day's scores, plus the caller's own standing"
       path_part   = "leaderboard"

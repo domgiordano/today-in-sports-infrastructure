@@ -441,3 +441,39 @@ resource "aws_dynamodb_table" "groups" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-groups" }))
 }
+
+#**********************
+# Announcements
+#**********************
+
+# Rows carry a hard end date and clean themselves up a month after it passes.
+# An announcement without an end runs forever once you forget about it, and a
+# stale banner teaches people to ignore the channel.
+resource "aws_dynamodb_table" "announcements" {
+  name           = "${var.app_name}-announcements"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "announcementId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = false
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
+  }
+
+  attribute {
+    name = "announcementId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-announcements" }))
+}

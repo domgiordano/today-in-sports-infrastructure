@@ -12,6 +12,18 @@ locals {
       path_part   = "me"
       http_method = "GET"
     },
+    {
+      name        = "groups"
+      description = "The groups this player belongs to"
+      path_part   = "groups"
+      http_method = "GET"
+    },
+    {
+      name        = "groups-action"
+      description = "Create, join, leave or re-code a group"
+      path_part   = "groups-action"
+      http_method = "POST"
+    },
   ]
 }
 

@@ -91,7 +91,8 @@ data "aws_iam_policy_document" "lambda_policy" {
       aws_dynamodb_table.users.arn,
       "${aws_dynamodb_table.users.arn}/index/*",
       aws_dynamodb_table.groups.arn,
-      "${aws_dynamodb_table.groups.arn}/index/*"
+      "${aws_dynamodb_table.groups.arn}/index/*",
+      aws_dynamodb_table.announcements.arn
     ]
   }
 
