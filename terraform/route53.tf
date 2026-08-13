@@ -1,35 +1,27 @@
 #**********************
-# This app owns its own hosted zone.
+# Hosted zone — read, not created.
 #
-# Not a data source pointed at xomware.com — Today in Sports is standalone and
-# its DNS lives with it.
+# Registering a domain through Route53 Domains creates its hosted zone
+# automatically, and the registration points the domain's delegation at that
+# zone. Declaring `resource "aws_route53_zone"` here would create a *second*
+# zone with different nameservers, which the domain would ignore — records would
+# apply cleanly to a zone nothing resolves against, and DNS would silently not
+# work.
 #
-# Bootstrap ordering, which matters on a first apply:
-#   1. Buy the domain at a registrar.
-#   2. `terraform apply` — this zone is created and outputs four NS records.
-#   3. Set those four nameservers at the registrar.
-#   4. Wait for propagation, then apply again. The ACM certificates validate by
-#      DNS, so they cannot issue until the registrar delegates to this zone;
-#      until then apply will sit at certificate validation and eventually time
-#      out. That is expected, not a failure of this config.
+# Reading it instead keeps ownership consistent: the domain and its zone are
+# created by registration, Terraform manages the records inside. It also removes
+# the two-pass apply entirely — delegation is already correct, so ACM's DNS
+# validation succeeds on the first run.
 #**********************
 
-resource "aws_route53_zone" "main" {
-  name    = var.domain_name
-  comment = "Managed by ${var.app_name}-infrastructure"
-
-  tags = merge(local.standard_tags, tomap({ "name" = var.domain_name }))
-
-  lifecycle {
-    # Recreating a zone issues new nameservers and takes the domain offline
-    # until the registrar is updated again.
-    prevent_destroy = true
-  }
+data "aws_route53_zone" "main" {
+  name         = "${var.domain_name}."
+  private_zone = false
 }
 
 # API Gateway custom domain DNS record
 resource "aws_route53_record" "api" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = data.aws_route53_zone.main.zone_id
   name    = local.api_domain_name
   type    = "A"
 
@@ -40,9 +32,9 @@ resource "aws_route53_record" "api" {
   }
 }
 
-output "nameservers" {
-  description = "Set these four at the domain registrar, then apply again."
-  value       = aws_route53_zone.main.name_servers
+output "hosted_zone_id" {
+  description = "The zone Route53 Domains created at registration."
+  value       = data.aws_route53_zone.main.zone_id
 }
 
 output "cognito_user_pool_id" {
