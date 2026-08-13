@@ -98,7 +98,16 @@ resource "aws_cognito_user_pool_client" "web" {
 
   generate_secret = false # public SPA client — a secret cannot be kept
 
+  # USER_PASSWORD_AUTH lets the app present its own sign-in form and call
+  # Cognito directly, rather than redirecting to the hosted UI. The password
+  # crosses the wire under TLS to Cognito's own endpoint and is never stored.
+  #
+  # SRP would avoid sending it at all, but needs a sizeable client library for a
+  # difference that only matters if TLS is already broken. The hosted UI is the
+  # thing being avoided here: it cannot be styled, and bouncing someone to a
+  # different-looking page mid-signup is the worst part of the flow.
   explicit_auth_flows = [
+    "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
   ]
