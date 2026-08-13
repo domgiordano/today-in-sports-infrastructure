@@ -59,3 +59,14 @@ resource "aws_kms_alias" "web_app" {
   name          = "alias/${var.app_name}-web-app"
   target_key_id = aws_kms_key.web_app.key_id
 }
+
+#**********************
+# AWS-managed SSM key
+#
+# SecureString parameters are encrypted under this unless a CMK is named. The
+# Lambda role needs decrypt on it to read any secret — see iam_lambda.tf.
+#**********************
+
+data "aws_kms_alias" "ssm" {
+  name = "alias/aws/ssm"
+}

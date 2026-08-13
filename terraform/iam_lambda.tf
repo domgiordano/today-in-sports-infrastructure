@@ -39,7 +39,6 @@ data "aws_iam_policy_document" "lambda_policy" {
       "ssm:GetParametersByPath"
     ]
     resources = [
-      "arn:aws:ssm:${var.aws_region}:${local.web_app_account_id}:parameter/${var.app_name}/*",
       "arn:aws:ssm:${var.aws_region}:${local.web_app_account_id}:parameter/${var.app_name}/*"
     ]
   }
@@ -52,7 +51,14 @@ data "aws_iam_policy_document" "lambda_policy" {
       "kms:GenerateDataKey",
       "kms:DescribeKey"
     ]
-    resources = [aws_kms_key.dynamodb.arn]
+    # The SSM key matters as much as the table key. SecureString parameters are
+    # encrypted under the AWS-managed alias/aws/ssm key, so without decrypt on
+    # it every GetParameter(WithDecryption=true) fails with AccessDenied — at
+    # runtime only, since plan and apply are both perfectly happy.
+    resources = [
+      aws_kms_key.dynamodb.arn,
+      data.aws_kms_alias.ssm.target_key_arn,
+    ]
   }
 
   statement {

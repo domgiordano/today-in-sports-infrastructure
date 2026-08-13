@@ -154,26 +154,27 @@ resource "aws_cognito_user_pool_domain" "main" {
 #**********************
 # Google sign-in
 #
-# Credentials are NOT Terraform variables. An unset TF_VAR_ resolves to an empty
-# string, which plan/validate accept silently and the AWS API then rejects at
-# apply — the exact failure mode xomtracks hit with SSM. Create the parameters
-# once by hand, then flip enable_google_idp:
+# The parameters themselves are created by ssm.tf, so the path and its IAM
+# scoping exist from the first apply. Only the *values* are set out of band —
+# Terraform cannot invent a Google credential, and routing one through Terraform
+# would write it to state in plaintext.
+#
+# These data sources read the *live* value rather than the resource attribute,
+# because `ignore_changes = [value]` means state still holds the placeholder.
 #
 #   aws ssm put-parameter --name /today-in-sports/google/client-id \
-#     --type SecureString --value '...'
-#   aws ssm put-parameter --name /today-in-sports/google/client-secret \
-#     --type SecureString --value '...'
+#     --type SecureString --value '...' --overwrite
 #**********************
 
 data "aws_ssm_parameter" "google_client_id" {
   count           = var.enable_google_idp ? 1 : 0
-  name            = "/${var.app_name}/google/client-id"
+  name            = aws_ssm_parameter.google_client_id.name
   with_decryption = true
 }
 
 data "aws_ssm_parameter" "google_client_secret" {
   count           = var.enable_google_idp ? 1 : 0
-  name            = "/${var.app_name}/google/client-secret"
+  name            = aws_ssm_parameter.google_client_secret.name
   with_decryption = true
 }
 
