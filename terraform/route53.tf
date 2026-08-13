@@ -56,3 +56,28 @@ output "cognito_web_client_id" {
 output "cognito_hosted_ui_domain" {
   value = "https://${aws_cognito_user_pool_domain.main.domain}.auth.${var.aws_region}.amazoncognito.com"
 }
+
+# Consumed by the local ingestion scripts — see docs DEPLOY.md. Raw payloads are
+# archived here before parsing, and that archive is the source of record once
+# ingestion completes.
+output "raw_archive_bucket" {
+  value = aws_s3_bucket.raw_archive.id
+}
+
+output "api_domain" {
+  value = local.api_domain_name
+}
+
+output "site_domain" {
+  value = local.domain_name
+}
+
+output "dynamodb_tables" {
+  value = {
+    games       = aws_dynamodb_table.games.id
+    events      = aws_dynamodb_table.events.id
+    questions   = aws_dynamodb_table.questions.id
+    quizzes     = aws_dynamodb_table.quizzes.id
+    source_runs = aws_dynamodb_table.source_runs.id
+  }
+}
