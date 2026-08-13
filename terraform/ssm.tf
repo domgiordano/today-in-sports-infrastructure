@@ -98,3 +98,16 @@ resource "aws_ssm_parameter" "api_secret_key" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "api-secret-key" }))
 }
+
+# The Guardian key. Set in CI from a GitHub secret and never by hand, so the
+# value in AWS always matches the one in source control's idea of the world.
+# Coalesced so a missing secret writes a placeholder rather than an empty
+# string, which SSM rejects.
+resource "aws_ssm_parameter" "guardian_api_key" {
+  name        = "/${var.app_name}/guardian/api-key"
+  description = "Guardian Open Platform API key"
+  type        = "SecureString"
+  value       = coalesce(var.guardian_api_key, "unset")
+
+  tags = merge(local.standard_tags, tomap({ "name" = "guardian-api-key" }))
+}

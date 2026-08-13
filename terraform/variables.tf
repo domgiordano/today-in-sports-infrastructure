@@ -162,3 +162,10 @@ variable "balldontlie_api_key" {
   default     = ""
   sensitive   = true
 }
+
+variable "guardian_api_key" {
+  description = "Guardian Open Platform key, supplied by CI from a GitHub secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

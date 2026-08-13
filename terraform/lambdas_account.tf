@@ -13,6 +13,12 @@ locals {
       http_method = "GET"
     },
     {
+      name        = "profile"
+      description = "Update your own display name or self-declared region"
+      path_part   = "profile"
+      http_method = "POST"
+    },
+    {
       name        = "groups"
       description = "The groups this player belongs to"
       path_part   = "groups"

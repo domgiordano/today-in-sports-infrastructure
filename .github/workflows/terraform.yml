@@ -60,6 +60,7 @@ jobs:
           # ignored by Terraform, so an unset one simply coalesces to the
           # "unset" placeholder rather than failing the apply.
           TF_VAR_balldontlie_api_key: ${{ secrets.BALLDONTLIE_API_KEY }}
+          TF_VAR_guardian_api_key: ${{ secrets.GUARDIAN_API_KEY }}
           TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
@@ -131,5 +132,6 @@ jobs:
           # ignored by Terraform, so an unset one simply coalesces to the
           # "unset" placeholder rather than failing the apply.
           TF_VAR_balldontlie_api_key: ${{ secrets.BALLDONTLIE_API_KEY }}
+          TF_VAR_guardian_api_key: ${{ secrets.GUARDIAN_API_KEY }}
           TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
           TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
