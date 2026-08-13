@@ -38,6 +38,17 @@ locals {
 # Set the value with:
 #   aws ssm put-parameter --name /today-in-sports/balldontlie/api-key \
 #     --type SecureString --value 'YOUR_KEY' --overwrite
+# The key was created by hand before Terraform managed this resource, so the
+# first apply hit ParameterAlreadyExists. An import block adopts the existing
+# parameter rather than trying to create it — and it runs during a normal
+# `apply`, so nothing has to be done from a laptop or the console.
+#
+# Safe to delete once applied; it is only needed for the adoption.
+import {
+  to = aws_ssm_parameter.balldontlie_api_key
+  id = "/today-in-sports/balldontlie/api-key"
+}
+
 resource "aws_ssm_parameter" "balldontlie_api_key" {
   name        = "/${var.app_name}/balldontlie/api-key"
   description = "balldontlie API key for NBA ingestion — value set out of band"
