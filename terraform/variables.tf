@@ -127,3 +127,38 @@ variable "admin_email" {
   type        = string
   default     = "dominickj.giordano@gmail.com"
 }
+
+# ============================================
+# Secrets supplied by CI
+#
+# Values arrive as TF_VAR_* from GitHub Actions secrets, matching
+# xomify-infrastructure. Terraform owns both the parameter and its value.
+#
+# Each defaults to "" and is coalesced to a placeholder before being written.
+# That guard exists because an unset TF_VAR resolves to an empty string, which
+# plan and validate accept silently and SSM's PutParameter then rejects outright
+# (ValidationException: length >= 1) — exactly the failure xomtracks hit on its
+# first real apply. Writing "unset" instead fails loudly in the app, where it is
+# obvious, rather than at apply time in a way that looks like an infra bug.
+# ============================================
+
+variable "google_client_id" {
+  description = "Google OAuth client id (TF_VAR_google_client_id)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "google_client_secret" {
+  description = "Google OAuth client secret (TF_VAR_google_client_secret)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "balldontlie_api_key" {
+  description = "balldontlie API key for NBA ingestion (TF_VAR_balldontlie_api_key)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

@@ -1,31 +1,28 @@
 # ============================================
 # SSM parameters
 #
-# Terraform owns the parameter — its path, type, KMS and IAM scoping — so
-# nothing has to be created by hand and no Lambda ever hits ParameterNotFound.
-# What Terraform does NOT own is the *value* of a third-party credential, for
-# two reasons:
+# Terraform owns both the parameter and its value, matching
+# xomify-infrastructure. Secrets arrive as TF_VAR_* from GitHub Actions secrets,
+# so the only place a credential is pasted is the repo's secret store — never a
+# console, never an ad-hoc CLI call.
 #
-#   1. It cannot invent one. A balldontlie or Google key is issued by someone
-#      else; no amount of HCL produces it.
-#   2. Any value routed through Terraform lands in state in plaintext. State
-#      lives in S3 and would then hold live secrets.
+# The accepted cost is that these values live in Terraform state, which sits in
+# the private, encrypted xomware-terraform-state bucket.
 #
-# So each secret is created with a real, non-empty placeholder and carries
-# `ignore_changes = [value]`. Dom sets the value once, out of band, and
-# Terraform never fights it afterwards.
-#
-# The placeholder is "unset", NOT "". This is the exact failure xomtracks hit:
-# no-default variables wired to TF_VAR_* secrets that were never set resolved to
-# an empty string, which plan and validate accepted silently, and then SSM's
-# PutParameter rejected outright (ValidationException: length >= 1) on the first
-# real apply.
+# The one generated in-stack (the API signing key) needs no human input at all,
+# which is strictly better where it is possible.
 # ============================================
 
 locals {
   # A parameter still holding this has not been filled in yet. Features that
   # need a real credential check for it before switching themselves on.
   ssm_placeholder = "unset"
+
+  # Coalesce empties to the placeholder. SSM rejects an empty value outright,
+  # so an unset CI secret would otherwise fail the apply rather than the feature.
+  google_client_id     = var.google_client_id != "" ? var.google_client_id : local.ssm_placeholder
+  google_client_secret = var.google_client_secret != "" ? var.google_client_secret : local.ssm_placeholder
+  balldontlie_api_key  = var.balldontlie_api_key != "" ? var.balldontlie_api_key : local.ssm_placeholder
 }
 
 # --------------------------------------------------------------- balldontlie
@@ -35,28 +32,15 @@ locals {
 # returns 403, Basketball-Reference prohibits scraping). The free tier is
 # sufficient and reaches back to 1946.
 #
-# Set the value with:
-#   aws ssm put-parameter --name /today-in-sports/balldontlie/api-key \
-#     --type SecureString --value 'YOUR_KEY' --overwrite
-# The key was created by hand before Terraform managed this resource, so the
-# first apply hit ParameterAlreadyExists. An import block adopts the existing
-# parameter rather than trying to create it — and it runs during a normal
-# `apply`, so nothing has to be done from a laptop or the console.
-#
-# Safe to delete once applied; it is only needed for the adoption.
-import {
-  to = aws_ssm_parameter.balldontlie_api_key
-  id = "/today-in-sports/balldontlie/api-key"
-}
-
+# Value comes from the BALLDONTLIE_API_KEY repo secret via TF_VAR.
 resource "aws_ssm_parameter" "balldontlie_api_key" {
   name        = "/${var.app_name}/balldontlie/api-key"
-  description = "balldontlie API key for NBA ingestion — value set out of band"
+  description = "balldontlie API key for NBA ingestion"
   type        = "SecureString"
-  value       = local.ssm_placeholder
+  value       = local.balldontlie_api_key
 
   lifecycle {
-    ignore_changes = [value, tags, tags_all]
+    ignore_changes = [tags, tags_all]
   }
 
   tags = merge(local.standard_tags, tomap({ "name" = "balldontlie-api-key" }))
@@ -70,12 +54,12 @@ resource "aws_ssm_parameter" "balldontlie_api_key" {
 # chicken-and-egg.
 resource "aws_ssm_parameter" "google_client_id" {
   name        = "/${var.app_name}/google/client-id"
-  description = "Google OAuth client id — value set out of band"
+  description = "Google OAuth client id"
   type        = "SecureString"
-  value       = local.ssm_placeholder
+  value       = local.google_client_id
 
   lifecycle {
-    ignore_changes = [value, tags, tags_all]
+    ignore_changes = [tags, tags_all]
   }
 
   tags = merge(local.standard_tags, tomap({ "name" = "google-client-id" }))
@@ -83,12 +67,12 @@ resource "aws_ssm_parameter" "google_client_id" {
 
 resource "aws_ssm_parameter" "google_client_secret" {
   name        = "/${var.app_name}/google/client-secret"
-  description = "Google OAuth client secret — value set out of band"
+  description = "Google OAuth client secret"
   type        = "SecureString"
-  value       = local.ssm_placeholder
+  value       = local.google_client_secret
 
   lifecycle {
-    ignore_changes = [value, tags, tags_all]
+    ignore_changes = [tags, tags_all]
   }
 
   tags = merge(local.standard_tags, tomap({ "name" = "google-client-secret" }))
