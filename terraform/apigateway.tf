@@ -9,9 +9,14 @@
 #**********************
 
 locals {
-  # Phase 1 exposes admin routes only. `authorization` is NONE at the gateway;
-  # each handler validates the Bearer token in-handler and checks the caller
-  # against ADMIN_EMAIL. This matches xomify and xomtracks.
+  # Admin routes are gated by the Cognito user-pool authorizer, so API Gateway
+  # verifies the JWT signature and expiry before a handler runs and hands the
+  # claims through as `requestContext.authorizer.claims`.
+  #
+  # These were NONE, which meant that context was never populated at all — the
+  # handlers looked for a caller email, found nothing, and returned 401 to
+  # everyone including the admin. Being an admin is still checked in-handler
+  # against ADMIN_EMAIL; the gateway only establishes *who* is calling.
   play_endpoints = [
     for l in local.play_lambdas : {
       name        = l.name
@@ -29,7 +34,7 @@ locals {
       path_part     = l.path_part
       http_method   = l.http_method
       invoke_arn    = aws_lambda_function.admin[l.name].invoke_arn
-      authorization = "NONE"
+      authorization = "COGNITO_USER_POOLS"
     }
   ]
 }
