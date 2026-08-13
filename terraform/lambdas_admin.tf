@@ -10,6 +10,12 @@ locals {
       http_method = "GET"
     },
     {
+      name        = "errors"
+      description = "Admin-only: recent request failures, newest first"
+      path_part   = "errors"
+      http_method = "GET"
+    },
+    {
       name        = "questions-list"
       description = "Admin-only: browse the question bank, filtered by status/sport/tier/date"
       path_part   = "questions"

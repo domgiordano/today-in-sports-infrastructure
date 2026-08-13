@@ -308,3 +308,51 @@ resource "aws_dynamodb_table" "plays" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-plays" }))
 }
+
+#**********************
+# Request / error log
+#**********************
+
+# Written by the error-handling hook on every request, best-effort and silent
+# on failure. Partitioned by outcome rather than by path so the errors panel is
+# a query rather than a scan over every successful request ever served.
+#
+# Rows expire on their own: successes after a fortnight, failures after ninety
+# days, because a 500 is looked up long after it happened and a 200 is not.
+resource "aws_dynamodb_table" "request_log" {
+  name           = "${var.app_name}-request-log"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "bucket"
+  range_key      = "loggedAt"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  # Deliberately off. This table is disposable instrumentation with a TTL, and
+  # continuous backups of it would cost more than the data is worth.
+  point_in_time_recovery {
+    enabled = false
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
+  }
+
+  # ok | rejected | error | last-seen
+  attribute {
+    name = "bucket"
+    type = "S"
+  }
+
+  attribute {
+    name = "loggedAt"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-request-log" }))
+}
