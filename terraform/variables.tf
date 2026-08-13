@@ -17,9 +17,9 @@ variable "domain_name" {
 }
 
 variable "enable_google_idp" {
-  description = "Wire Google sign-in into the user pool. Requires /<app_name>/google/client-id and /client-secret to exist in SSM first — see cognito.tf."
+  description = "Wire Google sign-in into the user pool. Requires the GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET repo secrets."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "aws_region" {

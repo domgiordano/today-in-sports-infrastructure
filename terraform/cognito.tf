@@ -163,29 +163,11 @@ resource "aws_cognito_user_pool_domain" "main" {
 #**********************
 # Google sign-in
 #
-# The parameters themselves are created by ssm.tf, so the path and its IAM
-# scoping exist from the first apply. Only the *values* are set out of band —
-# Terraform cannot invent a Google credential, and routing one through Terraform
-# would write it to state in plaintext.
-#
-# These data sources read the *live* value rather than the resource attribute,
-# because `ignore_changes = [value]` means state still holds the placeholder.
-#
-#   aws ssm put-parameter --name /today-in-sports/google/client-id \
-#     --type SecureString --value '...' --overwrite
+# Credentials come from TF_VAR_google_client_* (GitHub secrets), the same route
+# as every other secret here. Read straight from the variables rather than via a
+# data source on the SSM parameter: Terraform writes those parameters in this
+# same apply, so a read-back would race its own write.
 #**********************
-
-data "aws_ssm_parameter" "google_client_id" {
-  count           = var.enable_google_idp ? 1 : 0
-  name            = aws_ssm_parameter.google_client_id.name
-  with_decryption = true
-}
-
-data "aws_ssm_parameter" "google_client_secret" {
-  count           = var.enable_google_idp ? 1 : 0
-  name            = aws_ssm_parameter.google_client_secret.name
-  with_decryption = true
-}
 
 resource "aws_cognito_identity_provider" "google" {
   count = var.enable_google_idp ? 1 : 0
@@ -195,8 +177,8 @@ resource "aws_cognito_identity_provider" "google" {
   provider_type = "Google"
 
   provider_details = {
-    client_id        = data.aws_ssm_parameter.google_client_id[0].value
-    client_secret    = data.aws_ssm_parameter.google_client_secret[0].value
+    client_id        = var.google_client_id
+    client_secret    = var.google_client_secret
     authorize_scopes = "email openid profile"
   }
 
