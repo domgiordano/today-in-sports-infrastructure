@@ -248,3 +248,63 @@ resource "aws_dynamodb_table" "source_runs" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-source-runs" }))
 }
+
+#**********************
+# PLAYS — one session per identity per quiz date
+#
+# Holds server-stamped serve times and graded answers. The client never posts a
+# score; it posts a choice, and everything that decides points is computed
+# server-side from this row.
+#
+# Sessions are transient, unlike everything else here, so they carry a TTL
+# rather than accumulating forever.
+#**********************
+
+resource "aws_dynamodb_table" "plays" {
+  name           = "${var.app_name}-plays"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "playId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  # "<cognito-sub-or-device-id>#2026-08-13"
+  attribute {
+    name = "playId"
+    type = "S"
+  }
+
+  attribute {
+    name = "quizDate"
+    type = "S"
+  }
+
+  attribute {
+    name = "totalPoints"
+    type = "N"
+  }
+
+  # Daily leaderboard reads: one partition per day, sorted by score. Sharding
+  # comes with the leaderboard itself; this serves the top-N query.
+  global_secondary_index {
+    name            = "quizDate-totalPoints-index"
+    hash_key        = "quizDate"
+    range_key       = "totalPoints"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-plays" }))
+}

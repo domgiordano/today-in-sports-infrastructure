@@ -12,6 +12,17 @@ locals {
   # Phase 1 exposes admin routes only. `authorization` is NONE at the gateway;
   # each handler validates the Bearer token in-handler and checks the caller
   # against ADMIN_EMAIL. This matches xomify and xomtracks.
+  play_endpoints = [
+    for l in local.play_lambdas : {
+      name        = l.name
+      path_part   = l.path_part
+      http_method = l.http_method
+      invoke_arn  = aws_lambda_function.play[l.name].invoke_arn
+      # Public. Anonymous players are first-class here.
+      authorization = "NONE"
+    }
+  ]
+
   admin_endpoints = [
     for l in local.admin_lambdas : {
       name          = l.name
@@ -41,5 +52,6 @@ module "api" {
 
   services = {
     admin = { path_prefix = "admin", endpoints = local.admin_endpoints }
+    play  = { path_prefix = "play", endpoints = local.play_endpoints }
   }
 }

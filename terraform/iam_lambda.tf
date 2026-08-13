@@ -83,7 +83,9 @@ data "aws_iam_policy_document" "lambda_policy" {
       "${aws_dynamodb_table.questions.arn}/index/*",
       aws_dynamodb_table.quizzes.arn,
       "${aws_dynamodb_table.quizzes.arn}/index/*",
-      aws_dynamodb_table.source_runs.arn
+      aws_dynamodb_table.source_runs.arn,
+      aws_dynamodb_table.plays.arn,
+      "${aws_dynamodb_table.plays.arn}/index/*"
     ]
   }
 

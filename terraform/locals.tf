@@ -32,6 +32,7 @@ locals {
     QUIZZES_STATUS_INDEX = "status-quizDate-index"
 
     SOURCE_RUNS_TABLE_NAME = aws_dynamodb_table.source_runs.id
+    PLAYS_TABLE_NAME       = aws_dynamodb_table.plays.id
 
     # Untouched upstream payloads. Once ingestion completes this archive, not
     # the upstream API, is the source of record — see the durability rule in
