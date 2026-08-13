@@ -1,0 +1,12 @@
+{
+  "FirstName": "Dominick",
+  "LastName": "Giordano",
+  "ContactType": "PERSON",
+  "AddressLine1": "REPLACE street address",
+  "City": "REPLACE city",
+  "State": "REPLACE two-letter state, e.g. NJ",
+  "CountryCode": "US",
+  "ZipCode": "REPLACE zip",
+  "PhoneNumber": "+1.5551234567",
+  "Email": "dominickj.giordano@gmail.com"
+}
