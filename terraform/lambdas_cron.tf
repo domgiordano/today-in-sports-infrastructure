@@ -32,6 +32,16 @@ locals {
       timeout              = 600
       memory               = 512
     },
+    {
+      name        = "rollup-stats"
+      description = "Nightly: precompute play statistics so the analytics screen reads by key"
+      # 03:00 UTC — after the day has rolled over everywhere and well clear of
+      # the ingest and assembly jobs.
+      schedule             = "cron(0 3 * * ? *)"
+      schedule_description = "Daily at 03:00 UTC"
+      timeout              = 600
+      memory               = 1024
+    },
   ]
 }
 

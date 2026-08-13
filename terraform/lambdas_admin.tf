@@ -28,6 +28,12 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "analytics"
+      description = "Admin-only: precomputed play statistics by scope and period"
+      path_part   = "analytics"
+      http_method = "GET"
+    },
+    {
       name        = "questions-list"
       description = "Admin-only: browse the question bank, filtered by status/sport/tier/date"
       path_part   = "questions"

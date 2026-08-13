@@ -477,3 +477,42 @@ resource "aws_dynamodb_table" "announcements" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-announcements" }))
 }
+
+#**********************
+# Precomputed statistics
+#**********************
+
+# Written nightly, read by key. Computing these per request means scanning the
+# plays table on every page load - fine at ten players, and a silent failure at
+# ten thousand. Keyed scope/period so any slice is one GetItem.
+resource "aws_dynamodb_table" "stats" {
+  name           = "${var.app_name}-stats"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "scope"
+  range_key      = "period"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  # Derived data. It can be rebuilt from the plays table by rerunning the job,
+  # so continuous backups would be paying to protect a cache.
+  point_in_time_recovery {
+    enabled = false
+  }
+
+  attribute {
+    name = "scope"
+    type = "S"
+  }
+
+  attribute {
+    name = "period"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-stats" }))
+}
