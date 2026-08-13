@@ -33,12 +33,24 @@ resource "aws_s3_bucket_versioning" "site" {
   }
 }
 
+# SSE-S3, deliberately, not the customer-managed key.
+#
+# CloudFront's origin access control reaches S3 as the *service* principal
+# `cloudfront.amazonaws.com`. With SSE-KMS that principal also needs
+# `kms:Decrypt` on the key, and the key policy here grants AWS principals in the
+# account rather than service principals — so every object returned
+# AccessDenied through the distribution while being perfectly readable directly.
+#
+# Granting CloudFront decrypt would work, but it is the wrong trade: this bucket
+# holds a public website. Encrypting assets that are served to anyone with a
+# customer-managed key buys no confidentiality and adds a KMS request charge to
+# every origin fetch. The CMK is kept where it earns its place — the DynamoDB
+# tables and the raw source archive.
 resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
   bucket = aws_s3_bucket.site.id
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.web_app.arn
-      sse_algorithm     = "aws:kms"
+      sse_algorithm = "AES256"
     }
     bucket_key_enabled = true
   }
