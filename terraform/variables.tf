@@ -4,20 +4,22 @@ variable "app_name" {
   default     = "today-in-sports"
 }
 
-# Hosted under the xomware.com zone by default, matching the other apps.
-# If a standalone domain is bought later (today-in-sports.app and
-# todayinsports.app were both confirmed available), this and
-# route53_zone_name are the only two values that change.
-variable "domain_suffix" {
-  description = "Suffix for the domain of the app."
+# This app is standalone — it is NOT hosted under xomware.com. It owns its own
+# apex domain and its own Route53 hosted zone (see route53.tf).
+#
+# Both todayinsports.app and today-in-sports.app were confirmed available at
+# time of writing. After buying it, point the registrar's nameservers at the
+# four NS values this stack outputs, then apply again.
+variable "domain_name" {
+  description = "Apex domain for the app, e.g. todayinsports.app. Must be registered and its nameservers pointed at this stack's hosted zone."
   type        = string
-  default     = ".xomware.com"
+  default     = "todayinsports.app"
 }
 
-variable "route53_zone_name" {
-  description = "Route53 hosted zone name for DNS records"
-  type        = string
-  default     = "xomware.com"
+variable "enable_google_idp" {
+  description = "Wire Google sign-in into the user pool. Requires /<app_name>/google/client-id and /client-secret to exist in SSM first — see cognito.tf."
+  type        = bool
+  default     = false
 }
 
 variable "aws_region" {
@@ -67,7 +69,7 @@ variable "enable_cloudfront_cache" {
 variable "lambda_runtime" {
   description = "Runtime for Lambda functions"
   type        = string
-  default     = "python3.12"
+  default     = "python3.13"
 }
 
 variable "lambda_trace_mode" {

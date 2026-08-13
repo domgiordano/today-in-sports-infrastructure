@@ -30,7 +30,7 @@ module "api" {
   stage_name    = var.api_stage_name
   authorization = "NONE"
   cognito_user_pool_arns = [
-    data.aws_ssm_parameter.cognito_user_pool_arn.value
+    aws_cognito_user_pool.main.arn
   ]
   tags          = local.standard_tags
   allow_headers = local.api_allow_headers

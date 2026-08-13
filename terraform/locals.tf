@@ -1,5 +1,5 @@
 locals {
-  domain_name     = "${var.app_name}${var.domain_suffix}"
+  domain_name     = var.domain_name
   api_domain_name = "api.${local.domain_name}"
 
   web_app_account_id = data.aws_caller_identity.web_app_account.account_id
@@ -38,8 +38,8 @@ locals {
     # docs/features/today-in-sports/PLAN.md.
     RAW_ARCHIVE_BUCKET = aws_s3_bucket.raw_archive.id
 
-    COGNITO_USER_POOL_ID = data.aws_ssm_parameter.cognito_user_pool_id.value
-    COGNITO_JWKS_URL     = data.aws_ssm_parameter.cognito_user_pool_jwks_url.value
+    COGNITO_USER_POOL_ID = aws_cognito_user_pool.main.id
+    COGNITO_JWKS_URL     = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.main.id}/.well-known/jwks.json"
     ADMIN_EMAIL          = var.admin_email
     AWS_ACCOUNT_ID       = data.aws_caller_identity.web_app_account.account_id
   }

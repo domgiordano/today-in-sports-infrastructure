@@ -22,7 +22,7 @@ behind the admin gate.
 | `kms.tf` | CMKs for DynamoDB and the web-app S3 bucket |
 | `dynamodb.tf` | Five tables — games, events, questions, quizzes, source-runs |
 | `s3_raw.tf` | The raw upstream-payload archive |
-| `data_cognito.tf` | SSM reads for the **shared** `xomware_users` pool |
+| `cognito.tf` | This app's **own** user pool, client, hosted UI and Google IdP |
 | `iam_lambda.tf` | Lambda execution role and policy |
 | `lambda_layers.tf` | Shared `lambdas/common/` layer |
 | `lambdas_admin.tf` | Eight admin functions plus the authorizer |
@@ -32,12 +32,19 @@ behind the admin gate.
 
 ## Two things to know before applying
 
-**1. There is a cross-repo dependency.** `data_cognito.tf` reads
-`/xomware/shared/cognito/clients/today-in-sports-id`. That parameter does not
-exist yet — `xomware-infrastructure` must first add
-`aws_cognito_user_pool_client.today_in_sports` and its SSM export, and be
-applied. `terraform plan` here will fail until it does. This mirrors the
-dependency xomtracks hit.
+**1. This app is standalone.** It owns its Cognito pool, its domain and its
+Route53 hosted zone. It does not read the shared `xomware_users` pool and has no
+cross-repo dependency — nothing here waits on another repo's apply. The only
+intended link back to xomware is an app tile on the landing page.
+
+First apply needs DNS delegation, in this order:
+
+1. Buy the domain (`var.domain_name`, currently `todayinsports.app`).
+2. `terraform apply` — creates the hosted zone and outputs four nameservers.
+3. Set those nameservers at the registrar.
+4. Apply again. ACM validates by DNS, so certificates cannot issue until the
+   registrar delegates; before that, apply will stall at certificate validation.
+   Expected, not a config failure.
 
 **2. The raw archive is the source of record, not the upstream APIs.** The
 corpus is a one-time extraction of immutable data — historical results never

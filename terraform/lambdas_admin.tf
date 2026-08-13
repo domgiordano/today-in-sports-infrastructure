@@ -103,7 +103,7 @@ resource "aws_lambda_function" "admin" {
 
 resource "aws_lambda_function" "authorizer" {
   function_name    = "${var.app_name}-authorizer"
-  description      = "Validates the caller's JWT against the shared xomware_users pool"
+  description      = "Validates the caller's JWT against this app's own Cognito pool"
   filename         = "./templates/lambda_stub.zip"
   source_code_hash = filebase64sha256("./templates/lambda_stub.zip")
   handler          = "handler.handler"

@@ -109,7 +109,7 @@ resource "aws_route53_record" "cert_validation" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = data.aws_route53_zone.web_zone.zone_id
+  zone_id         = aws_route53_zone.main.zone_id
 }
 
 resource "aws_acm_certificate_validation" "cert" {
@@ -202,7 +202,7 @@ resource "aws_cloudfront_response_headers_policy" "site" {
 }
 
 resource "aws_route53_record" "site" {
-  zone_id = data.aws_route53_zone.web_zone.zone_id
+  zone_id = aws_route53_zone.main.zone_id
   name    = local.domain_name
   type    = "A"
 
