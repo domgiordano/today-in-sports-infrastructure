@@ -22,10 +22,20 @@ resource "aws_cognito_user_pool" "main" {
     case_sensitive = false
   }
 
+  # Eight characters, one number, no forced uppercase or symbols.
+  #
+  # Deliberately light. An account here holds a quiz streak, a display name and
+  # an email — no payments, nothing personal. The worst case of a compromise is
+  # someone else's trivia history, while every additional rule costs real
+  # signups at the moment a person is deciding whether to bother.
+  #
+  # It also matches current NIST guidance, which argues against mandatory
+  # composition rules: they push people toward "Password1!" patterns that are
+  # easier to guess, not harder. Length is what helps.
   password_policy {
-    minimum_length                   = 12
+    minimum_length                   = 8
     require_lowercase                = true
-    require_uppercase                = true
+    require_uppercase                = false
     require_numbers                  = true
     require_symbols                  = false
     temporary_password_validity_days = 7
