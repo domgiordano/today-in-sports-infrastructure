@@ -47,6 +47,12 @@ locals {
       path_part   = "name"
       http_method = "POST"
     },
+    {
+      name        = "stats"
+      description = "Public: precomputed play statistics — trend, per-sport accuracy, region slices. Aggregates only; no group scope, because a group is private by design"
+      path_part   = "stats"
+      http_method = "GET"
+    },
   ]
 }
 
