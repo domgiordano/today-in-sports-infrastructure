@@ -33,6 +33,16 @@ locals {
       memory               = 512
     },
     {
+      name        = "publish-quizzes"
+      description = "Daily: publish assembled drafts so the game never goes dark"
+      # 04:00 UTC — after the nightly rollup, and a clear day before the quiz
+      # it publishes could ever be served, so a bad day has time to be caught.
+      schedule             = "cron(0 4 * * ? *)"
+      schedule_description = "Daily at 04:00 UTC"
+      timeout              = 600
+      memory               = 512
+    },
+    {
       name        = "rollup-stats"
       description = "Nightly: precompute play statistics so the analytics screen reads by key"
       # 03:00 UTC — after the day has rolled over everywhere and well clear of
