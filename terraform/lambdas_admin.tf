@@ -81,6 +81,18 @@ locals {
       path_part   = "events"
       http_method = "GET"
     },
+    {
+      name        = "narrative"
+      description = "Admin-only: news-archive candidates awaiting a written question"
+      path_part   = "narrative"
+      http_method = "GET"
+    },
+    {
+      name        = "narrative-write"
+      description = "Admin-only: write a question from a cited sentence, or discard it"
+      path_part   = "narrative-write"
+      http_method = "POST"
+    },
   ]
 }
 
