@@ -124,8 +124,18 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
+      # Manual dispatch applies too, not just push. Every secret here reaches
+      # SSM through Terraform, so without this a key rotation could only be
+      # deployed by making some unrelated change under terraform/ - and a
+      # commit whose only purpose is to trigger a workflow is a commit that
+      # explains nothing to whoever reads it next.
+      #
+      # Pull requests still only plan: dispatch is restricted to people who can
+      # already push to master.
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        if: >-
+          github.ref == 'refs/heads/master' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: terraform apply -auto-approve -input=false
         env:
           # Secrets Terraform writes into SSM. Undeclared variables are
