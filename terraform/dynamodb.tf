@@ -14,12 +14,13 @@
 #**********************
 
 resource "aws_dynamodb_table" "games" {
-  name           = "${var.app_name}-games"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "sportSeason"
-  range_key      = "gameDateId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-games"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "sportSeason"
+  range_key                   = "gameDateId"
 
   server_side_encryption {
     enabled     = true
@@ -53,12 +54,13 @@ resource "aws_dynamodb_table" "games" {
 #**********************
 
 resource "aws_dynamodb_table" "events" {
-  name           = "${var.app_name}-events"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "mmdd"
-  range_key      = "yearEventId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-events"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "mmdd"
+  range_key                   = "yearEventId"
 
   server_side_encryption {
     enabled     = true
@@ -119,11 +121,12 @@ resource "aws_dynamodb_table" "events" {
 #**********************
 
 resource "aws_dynamodb_table" "questions" {
-  name           = "${var.app_name}-questions"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "questionId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-questions"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "questionId"
 
   server_side_encryption {
     enabled     = true
@@ -182,11 +185,12 @@ resource "aws_dynamodb_table" "questions" {
 #**********************
 
 resource "aws_dynamodb_table" "quizzes" {
-  name           = "${var.app_name}-quizzes"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "quizDate"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-quizzes"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "quizDate"
 
   server_side_encryption {
     enabled     = true
@@ -226,11 +230,12 @@ resource "aws_dynamodb_table" "quizzes" {
 #**********************
 
 resource "aws_dynamodb_table" "source_runs" {
-  name           = "${var.app_name}-source-runs"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "runId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-source-runs"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "runId"
 
   server_side_encryption {
     enabled     = true
@@ -261,11 +266,12 @@ resource "aws_dynamodb_table" "source_runs" {
 #**********************
 
 resource "aws_dynamodb_table" "plays" {
-  name           = "${var.app_name}-plays"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "playId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-plays"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "playId"
 
   server_side_encryption {
     enabled     = true
@@ -320,12 +326,13 @@ resource "aws_dynamodb_table" "plays" {
 # Rows expire on their own: successes after a fortnight, failures after ninety
 # days, because a 500 is looked up long after it happened and a 200 is not.
 resource "aws_dynamodb_table" "request_log" {
-  name           = "${var.app_name}-request-log"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "bucket"
-  range_key      = "loggedAt"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-request-log"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "bucket"
+  range_key                   = "loggedAt"
 
   server_side_encryption {
     enabled     = true
@@ -369,11 +376,12 @@ resource "aws_dynamodb_table" "request_log" {
 # post-confirmation trigger: a trigger is a second deploy target and a failure
 # mode where sign-up succeeds and the profile silently does not.
 resource "aws_dynamodb_table" "users" {
-  name           = "${var.app_name}-users"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "userId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-users"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "userId"
 
   server_side_encryption {
     enabled     = true
@@ -408,11 +416,12 @@ resource "aws_dynamodb_table" "users" {
 # public list of small private groups is a harassment surface with no upside
 # for a trivia game.
 resource "aws_dynamodb_table" "groups" {
-  name           = "${var.app_name}-groups"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "groupId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-groups"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "groupId"
 
   server_side_encryption {
     enabled     = true
@@ -450,11 +459,12 @@ resource "aws_dynamodb_table" "groups" {
 # An announcement without an end runs forever once you forget about it, and a
 # stale banner teaches people to ignore the channel.
 resource "aws_dynamodb_table" "announcements" {
-  name           = "${var.app_name}-announcements"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "announcementId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-announcements"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "announcementId"
 
   server_side_encryption {
     enabled     = true
@@ -486,12 +496,13 @@ resource "aws_dynamodb_table" "announcements" {
 # plays table on every page load - fine at ten players, and a silent failure at
 # ten thousand. Keyed scope/period so any slice is one GetItem.
 resource "aws_dynamodb_table" "stats" {
-  name           = "${var.app_name}-stats"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "scope"
-  range_key      = "period"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-stats"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "scope"
+  range_key                   = "period"
 
   server_side_encryption {
     enabled     = true

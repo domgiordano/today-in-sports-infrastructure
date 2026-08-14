@@ -12,7 +12,10 @@
 #**********************
 
 resource "aws_cognito_user_pool" "main" {
-  name = "${var.app_name}-users"
+  # Cognito has no point-in-time recovery and no undelete: losing this pool
+  # loses every account permanently.
+  deletion_protection = "ACTIVE"
+  name                = "${var.app_name}-users"
 
   # Email is the identity. Usernames are a support burden nobody asked for.
   username_attributes      = ["email"]
