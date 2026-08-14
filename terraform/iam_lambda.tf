@@ -97,6 +97,16 @@ data "aws_iam_policy_document" "lambda_policy" {
     ]
   }
 
+  # Sending the daily mail, and only ever as this domain. Scoped to the
+  # identity rather than "*" so a compromised handler cannot send as any other
+  # verified sender on the account — and there are several, belonging to other
+  # apps entirely.
+  statement {
+    sid       = "SendMailAsThisDomain"
+    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
+    resources = [aws_ses_domain_identity.main.arn]
+  }
+
   # Read-only on the raw archive. Writes to it happen from the local ingestion
   # scripts under Dom's own credentials, not from a Lambda — nothing in the
   # request path should ever be able to mutate the source of record.
