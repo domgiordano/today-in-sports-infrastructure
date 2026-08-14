@@ -81,7 +81,11 @@ jobs:
             const outcome = '${{ steps.plan.outcome }}';
             const icon = outcome === 'success' ? '✅' : '❌';
 
-            const body = `### ${icon} Terraform Plan
+            const body = `### ${icon} Terraform Plan — **not applied**
+
+            This is a plan. Nothing in this branch has reached AWS. A green
+            check here means the change *would* work, not that it is live —
+            merge to \`master\` to apply it.
 
             <details><summary>Show Plan Output</summary>
 
