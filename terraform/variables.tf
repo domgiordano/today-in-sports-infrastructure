@@ -169,3 +169,25 @@ variable "guardian_api_key" {
   sensitive   = true
   default     = ""
 }
+
+# Read off the repo, never built from a name:
+#   gh api /repos/<org>/<repo>/actions/oidc/customization/sub -q .sub_claim_prefix
+# These repos live under domgiordano, not Xomware, and carry GitHub's immutable
+# numeric identifiers. Both spellings are listed so a flip keeps working.
+variable "github_frontend_subjects" {
+  description = "OIDC subject prefixes allowed to assume the frontend deploy role"
+  type        = list(string)
+  default = [
+    "repo:domgiordano/today-in-sports-frontend",
+    "repo:domgiordano@44783934/today-in-sports-frontend@1333344462",
+  ]
+}
+
+variable "github_backend_subjects" {
+  description = "OIDC subject prefixes allowed to assume the backend deploy role"
+  type        = list(string)
+  default = [
+    "repo:domgiordano/today-in-sports-backend",
+    "repo:domgiordano@44783934/today-in-sports-backend@1333344413",
+  ]
+}
