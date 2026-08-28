@@ -527,3 +527,68 @@ resource "aws_dynamodb_table" "stats" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-stats" }))
 }
+
+#**********************
+# Reactions
+#**********************
+
+# An emoji left on somebody's round.
+#
+# Keyed by the round it is about (`playId`, which is already
+# "<identity>#<quiz-date>") and by who left it, so one person can react once to
+# a given round. Reacting again replaces rather than stacks — the alternative
+# is a row that says nothing except that somebody tapped a lot.
+#
+# The day index exists because a leaderboard needs every reaction for a date at
+# once. Without it a fifty-row board is fifty queries; with it, one.
+#
+# Rows expire with the round they are about. A reaction to a quiz nobody can
+# still see is not worth storing, and it means this table needs no cleanup of
+# its own.
+resource "aws_dynamodb_table" "reactions" {
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-reactions"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "playId"
+  range_key                   = "reactorId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  attribute {
+    name = "playId"
+    type = "S"
+  }
+
+  attribute {
+    name = "reactorId"
+    type = "S"
+  }
+
+  attribute {
+    name = "quizDate"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "day-index"
+    hash_key        = "quizDate"
+    range_key       = "playId"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-reactions" }))
+}

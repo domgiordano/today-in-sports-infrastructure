@@ -38,6 +38,8 @@ locals {
     GROUPS_TABLE_NAME        = aws_dynamodb_table.groups.id
     ANNOUNCEMENTS_TABLE_NAME = aws_dynamodb_table.announcements.id
     STATS_TABLE_NAME         = aws_dynamodb_table.stats.id
+    REACTIONS_TABLE_NAME     = aws_dynamodb_table.reactions.id
+    REACTIONS_DAY_INDEX      = "day-index"
 
     # Untouched upstream payloads. Once ingestion completes this archive, not
     # the upstream API, is the source of record — see the durability rule in

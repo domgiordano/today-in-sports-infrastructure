@@ -48,6 +48,12 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "react"
+      description = "Signed in: leave, change or clear an emoji on a finished round"
+      path_part   = "react"
+      http_method = "POST"
+    },
+    {
       name        = "stats"
       description = "Public: precomputed play statistics — trend, per-sport accuracy, region slices. Aggregates only; no group scope, because a group is private by design"
       path_part   = "stats"
