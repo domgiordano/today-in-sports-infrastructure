@@ -649,3 +649,56 @@ resource "aws_dynamodb_table" "usernames" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-usernames" }))
 }
+
+#**********************
+# Comments
+#**********************
+
+# What a group says about a day's results.
+#
+# One thread per group per day — `<groupId>#<quiz-date>` — because that is the
+# unit people actually talk about. A single endless thread per group would bury
+# today's argument under last month's, and a thread per player would fragment
+# four people into four conversations.
+#
+# The sort key is the creation timestamp with the comment id appended, so a
+# query returns a day in order and two comments posted in the same millisecond
+# still have a stable position rather than a race.
+#
+# Rows expire on the same 90-day clock as the rounds they discuss. A comment
+# about a quiz nobody can still reach has nothing left to point at.
+resource "aws_dynamodb_table" "comments" {
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-comments"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "threadId"
+  range_key                   = "postedAtId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  attribute {
+    name = "threadId"
+    type = "S"
+  }
+
+  attribute {
+    name = "postedAtId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-comments" }))
+}

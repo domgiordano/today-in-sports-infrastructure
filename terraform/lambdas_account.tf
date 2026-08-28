@@ -30,6 +30,18 @@ locals {
       path_part   = "groups-action"
       http_method = "POST"
     },
+    {
+      name        = "comments"
+      description = "What a group said about a day's results"
+      path_part   = "comments"
+      http_method = "GET"
+    },
+    {
+      name        = "comments-action"
+      description = "Post or delete a comment on a group's day"
+      path_part   = "comments-action"
+      http_method = "POST"
+    },
   ]
 }
 
