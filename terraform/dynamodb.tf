@@ -592,3 +592,60 @@ resource "aws_dynamodb_table" "reactions" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-reactions" }))
 }
+
+#**********************
+# Usernames
+#**********************
+
+# A claimed @handle.
+#
+# Its own table rather than a sentinel row in `users`, because that table is
+# scanned to build the admin user list and reservation rows would show up there
+# as people who do not exist.
+#
+# The key is the handle folded to lower case, which is what makes it unique:
+# "Dom" and "dom" are the same claim, and a conditional write on
+# attribute_not_exists is what settles a race between two people reaching for
+# the same one. Uniqueness cannot be had from a GSI — an index will happily
+# hold two identical values.
+#
+# No TTL. A handle is released when its owner changes or deletes it, never by
+# expiry: a name that lapses on a timer would be reassigned to somebody else
+# while the original owner's scores still carry it.
+resource "aws_dynamodb_table" "usernames" {
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-usernames"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "username"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "username"
+    type = "S"
+  }
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  # So a user's current handle can be found without storing it in two places
+  # and hoping they agree.
+  global_secondary_index {
+    name            = "owner-index"
+    hash_key        = "userId"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-usernames" }))
+}
