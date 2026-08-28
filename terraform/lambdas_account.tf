@@ -37,6 +37,18 @@ locals {
       http_method = "GET"
     },
     {
+      name        = "notifications"
+      description = "What this player has missed"
+      path_part   = "notifications"
+      http_method = "GET"
+    },
+    {
+      name        = "notifications-action"
+      description = "Mark notifications read"
+      path_part   = "notifications-action"
+      http_method = "POST"
+    },
+    {
       name        = "comments-action"
       description = "Post or delete a comment on a group's day"
       path_part   = "comments-action"

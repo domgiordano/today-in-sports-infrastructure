@@ -702,3 +702,53 @@ resource "aws_dynamodb_table" "comments" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-comments" }))
 }
+
+#**********************
+# Notifications
+#**********************
+
+# Something that happened which is worth telling one person about.
+#
+# Keyed by the person told, sorted newest first, because that is the only way
+# this is ever read: "what have I missed". There is no query for "everything
+# about a group" — that is what the group page is.
+#
+# Rows expire on the same 90-day clock as the things they point at. A
+# notification about a comment on a quiz that has aged out has nothing left to
+# open, and expiring them is what stops this table growing without bound for a
+# player who never opens the list.
+resource "aws_dynamodb_table" "notifications" {
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-notifications"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "userId"
+  range_key                   = "createdAtId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "createdAtId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-notifications" }))
+}
