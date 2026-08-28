@@ -39,6 +39,8 @@ locals {
     ANNOUNCEMENTS_TABLE_NAME = aws_dynamodb_table.announcements.id
     STATS_TABLE_NAME         = aws_dynamodb_table.stats.id
     REACTIONS_TABLE_NAME     = aws_dynamodb_table.reactions.id
+    USERNAMES_TABLE_NAME     = aws_dynamodb_table.usernames.id
+    USERNAMES_OWNER_INDEX    = "owner-index"
     REACTIONS_DAY_INDEX      = "day-index"
 
     # Untouched upstream payloads. Once ingestion completes this archive, not

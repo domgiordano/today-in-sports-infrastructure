@@ -88,6 +88,8 @@ data "aws_iam_policy_document" "lambda_policy" {
       "${aws_dynamodb_table.plays.arn}/index/*",
       aws_dynamodb_table.reactions.arn,
       "${aws_dynamodb_table.reactions.arn}/index/*",
+      aws_dynamodb_table.usernames.arn,
+      "${aws_dynamodb_table.usernames.arn}/index/*",
       aws_dynamodb_table.request_log.arn,
       "${aws_dynamodb_table.request_log.arn}/index/*",
       aws_dynamodb_table.users.arn,
