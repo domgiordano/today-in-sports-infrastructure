@@ -49,6 +49,12 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "history"
+      description = "This player's own recent rounds and accuracy by sport"
+      path_part   = "history"
+      http_method = "GET"
+    },
+    {
       name        = "comments-action"
       description = "Post or delete a comment on a group's day"
       path_part   = "comments-action"
