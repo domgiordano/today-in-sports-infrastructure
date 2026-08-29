@@ -191,3 +191,18 @@ variable "github_backend_subjects" {
     "repo:domgiordano@44783934/today-in-sports-backend@1333344413",
   ]
 }
+
+variable "github_infrastructure_subjects" {
+  description = "OIDC subject prefixes for this infrastructure repository"
+  type        = list(string)
+  default = [
+    "repo:domgiordano/today-in-sports-infrastructure",
+    "repo:domgiordano@44783934/today-in-sports-infrastructure@1333344346",
+  ]
+}
+
+variable "default_branch" {
+  description = "Branch a push to which is allowed to run terraform apply"
+  type        = string
+  default     = "master"
+}
