@@ -72,6 +72,10 @@ data "aws_iam_policy_document" "lambda_policy" {
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
       "dynamodb:DeleteItem",
+      # Friends writes both sides of a relationship in one transaction, so
+      # neither can exist without the other. PutItem does not cover this —
+      # a transaction is refused without its own permission.
+      "dynamodb:TransactWriteItems",
       "dynamodb:DescribeTable"
     ]
     resources = [
@@ -94,6 +98,8 @@ data "aws_iam_policy_document" "lambda_policy" {
       "${aws_dynamodb_table.comments.arn}/index/*",
       aws_dynamodb_table.notifications.arn,
       "${aws_dynamodb_table.notifications.arn}/index/*",
+      aws_dynamodb_table.friends.arn,
+      "${aws_dynamodb_table.friends.arn}/index/*",
       aws_dynamodb_table.request_log.arn,
       "${aws_dynamodb_table.request_log.arn}/index/*",
       aws_dynamodb_table.users.arn,

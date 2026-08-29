@@ -49,6 +49,18 @@ locals {
       http_method = "POST"
     },
     {
+      name        = "friends"
+      description = "This player's friends, their board, and pending requests"
+      path_part   = "friends"
+      http_method = "GET"
+    },
+    {
+      name        = "friends-action"
+      description = "Add, accept, decline, withdraw or unfriend"
+      path_part   = "friends-action"
+      http_method = "POST"
+    },
+    {
       name        = "history"
       description = "This player's own recent rounds and accuracy by sport"
       path_part   = "history"
