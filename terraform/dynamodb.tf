@@ -752,3 +752,46 @@ resource "aws_dynamodb_table" "notifications" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-notifications" }))
 }
+
+#**********************
+# Friends — mutual relationships between players
+#
+# Two rows per relationship, one from each side, so "who are my friends" is a
+# single query from either direction. Status is mirrored: pending_out on the
+# requester's row, pending_in on the recipient's, accepted on both.
+#
+# No TTL. A friendship is not a session — it lasts until somebody ends it, and
+# expiring one silently would be the strangest bug in the app.
+#**********************
+
+resource "aws_dynamodb_table" "friends" {
+  # There is no other record of who is friends with whom.
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-friends"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "userId"
+  range_key                   = "friendId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "friendId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-friends" }))
+}
