@@ -134,6 +134,21 @@ data "aws_iam_policy_document" "github_actions_backend" {
     resources = ["arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:function:${var.app_name}-*"]
   }
 
+  # Re-run a nightly job without waiting for the night. The rollups recompute
+  # from a full scan and overwrite, so running one early is idempotent — the
+  # same work, sooner.
+  #
+  # Its own statement, narrowed to `-cron-*`, rather than an extra action on
+  # DeployFunctions above: that one is scoped to `${var.app_name}-*` and would
+  # hand CI the ability to invoke every request-path lambda directly, bypassing
+  # the API Gateway authorizer that is the only thing checking who is calling.
+  statement {
+    sid       = "InvokeCrons"
+    effect    = "Allow"
+    actions   = ["lambda:InvokeFunction"]
+    resources = ["arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:function:${var.app_name}-cron-*"]
+  }
+
   statement {
     sid       = "ListLayers"
     effect    = "Allow"
