@@ -3,156 +3,19 @@ name: Terraform
 on:
   push:
     branches: [master]
-    paths: ['terraform/**']
+    paths: ['terraform/**', '.github/workflows/terraform.yml']
   pull_request:
     branches: [master]
-    paths: ['terraform/**']
+    paths: ['terraform/**', '.github/workflows/terraform.yml']
   workflow_dispatch:
 
-concurrency:
-  group: terraform-today-in-sports-infrastructure
-  cancel-in-progress: false
-
 permissions:
-  id-token: write # mint the OIDC token traded for the plan/apply role
   contents: read
   pull-requests: write
-
-env:
-  TF_DIR: terraform
-  AWS_REGION: us-east-1
+  id-token: write
 
 jobs:
   terraform:
-    name: Terraform
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.TF_DIR }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: "1.5.7"
-
-      # Read-only for plans, admin only for an apply on master. Selecting the
-      # role by event means a pull request cannot assume the role that
-      # mutates, regardless of what the workflow later does.
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master' && secrets.AWS_TERRAFORM_APPLY_ROLE_ARN || secrets.AWS_TERRAFORM_PLAN_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        id: plan
-        run: |
-          # A pipeline exits with tee's status, not terraform's, so without this a
-          # failed plan reports success and `Plan status` below never fires.
-          set -o pipefail
-          terraform plan -no-color -input=false -lock=false 2>&1 | tee /tmp/plan-output.txt
-        continue-on-error: true
-        env:
-          # Secrets Terraform writes into SSM. Undeclared variables are
-          # ignored by Terraform, so an unset one simply coalesces to the
-          # "unset" placeholder rather than failing the apply.
-          TF_VAR_balldontlie_api_key: ${{ secrets.BALLDONTLIE_API_KEY }}
-          TF_VAR_guardian_api_key: ${{ secrets.GUARDIAN_API_KEY }}
-          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
-          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-
-      - name: Post Plan to PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            let plan = fs.readFileSync('/tmp/plan-output.txt', 'utf8');
-
-            // Truncate if too long for GitHub comment (max ~65536 chars)
-            const maxLength = 60000;
-            if (plan.length > maxLength) {
-              plan = plan.substring(0, maxLength) + '\n\n... (truncated)';
-            }
-
-            const outcome = '${{ steps.plan.outcome }}';
-            const icon = outcome === 'success' ? '✅' : '❌';
-
-            const body = `### ${icon} Terraform Plan — **not applied**
-
-            This is a plan. Nothing in this branch has reached AWS. A green
-            check here means the change *would* work, not that it is live —
-            merge to \`master\` to apply it.
-
-            <details><summary>Show Plan Output</summary>
-
-            \`\`\`
-            ${plan}
-            \`\`\`
-
-            </details>
-
-            *Plan outcome: \`${outcome}\`*`;
-
-            // Find existing bot comment to update
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const botComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Terraform Plan')
-            );
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body,
-              });
-            }
-
-      - name: Plan Status Check
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
-      # Manual dispatch applies too, not just push. Every secret here reaches
-      # SSM through Terraform, so without this a key rotation could only be
-      # deployed by making some unrelated change under terraform/ - and a
-      # commit whose only purpose is to trigger a workflow is a commit that
-      # explains nothing to whoever reads it next.
-      #
-      # Pull requests still only plan: dispatch is restricted to people who can
-      # already push to master.
-      - name: Terraform Apply
-        if: >-
-          github.ref == 'refs/heads/master' &&
-          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        run: terraform apply -auto-approve -input=false
-        env:
-          # Secrets Terraform writes into SSM. Undeclared variables are
-          # ignored by Terraform, so an unset one simply coalesces to the
-          # "unset" placeholder rather than failing the apply.
-          TF_VAR_balldontlie_api_key: ${{ secrets.BALLDONTLIE_API_KEY }}
-          TF_VAR_guardian_api_key: ${{ secrets.GUARDIAN_API_KEY }}
-          TF_VAR_google_client_id: ${{ secrets.GOOGLE_CLIENT_ID }}
-          TF_VAR_google_client_secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+    uses: Xomware/github-actions/.github/workflows/terraform.yml@v1
+    with:
+      app: today-in-sports
